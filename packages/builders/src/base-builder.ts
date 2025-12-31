@@ -3,7 +3,6 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import chalk from 'chalk';
-import { parse } from 'comment-json';
 import enhancedResolveOriginal from 'enhanced-resolve';
 import * as esbuild from 'esbuild';
 import { findUp } from 'find-up';
@@ -40,52 +39,12 @@ export abstract class BaseBuilder {
   abstract build(): Promise<void>;
 
   /**
-   * Extracts TypeScript path mappings and baseUrl from tsconfig.json/jsconfig.json.
-   * Used to properly resolve module imports during bundling.
+   * Finds tsconfig.json/jsconfig.json for the project.
+   * Used by esbuild to properly resolve module imports during bundling.
    */
-  protected async getTsConfigOptions(): Promise<{
-    baseUrl?: string;
-    paths?: Record<string, string[]>;
-  }> {
-    const options: {
-      paths?: Record<string, string[]>;
-      baseUrl?: string;
-    } = {};
-
+  protected async findTsConfigPath(): Promise<string | undefined> {
     const cwd = this.config.workingDir || process.cwd();
-
-    const tsJsConfig = await findUp(['tsconfig.json', 'jsconfig.json'], {
-      cwd,
-    });
-
-    if (tsJsConfig) {
-      try {
-        const rawJson = await readFile(tsJsConfig, 'utf8');
-        const parsed: null | {
-          compilerOptions?: {
-            paths?: Record<string, string[]> | undefined;
-            baseUrl?: string;
-          };
-        } = parse(rawJson) as any;
-
-        if (parsed) {
-          options.paths = parsed.compilerOptions?.paths;
-
-          if (parsed.compilerOptions?.baseUrl) {
-            options.baseUrl = resolve(cwd, parsed.compilerOptions.baseUrl);
-          } else {
-            options.baseUrl = cwd;
-          }
-        }
-      } catch (err) {
-        console.error(
-          `Failed to parse ${tsJsConfig} aliases might not apply properly`,
-          err
-        );
-      }
-    }
-
-    return options;
+    return findUp(['tsconfig.json', 'jsconfig.json'], { cwd });
   }
 
   /**
@@ -288,11 +247,9 @@ export abstract class BaseBuilder {
     format = 'cjs',
     outfile,
     externalizeNonSteps,
-    tsBaseUrl,
-    tsPaths,
+    tsconfigPath,
   }: {
-    tsPaths?: Record<string, string[]>;
-    tsBaseUrl?: string;
+    tsconfigPath?: string;
     inputFiles: string[];
     outfile: string;
     format?: 'cjs' | 'esm';
@@ -394,6 +351,8 @@ export abstract class BaseBuilder {
       minify: false,
       jsx: 'preserve',
       logLevel: 'error',
+      // Use tsconfig for path alias resolution
+      tsconfig: tsconfigPath,
       resolveExtensions: [
         '.ts',
         '.tsx',
@@ -411,8 +370,6 @@ export abstract class BaseBuilder {
           mode: 'step',
           entriesToBundle: externalizeNonSteps ? combinedStepFiles : undefined,
           outdir: outfile ? dirname(outfile) : undefined,
-          tsBaseUrl,
-          tsPaths,
           workflowManifest,
         }),
       ],
@@ -447,11 +404,9 @@ export abstract class BaseBuilder {
     format = 'cjs',
     outfile,
     bundleFinalOutput = true,
-    tsBaseUrl,
-    tsPaths,
+    tsconfigPath,
   }: {
-    tsPaths?: Record<string, string[]>;
-    tsBaseUrl?: string;
+    tsconfigPath?: string;
     inputFiles: string[];
     outfile: string;
     format?: 'cjs' | 'esm';
@@ -523,6 +478,8 @@ export abstract class BaseBuilder {
       // This intermediate bundle is executed via runInContext() in a VM, so we need
       // inline source maps to get meaningful stack traces instead of "evalmachine.<anonymous>".
       sourcemap: 'inline',
+      // Use tsconfig for path alias resolution
+      tsconfig: tsconfigPath,
       resolveExtensions: [
         '.ts',
         '.tsx',
@@ -536,8 +493,6 @@ export abstract class BaseBuilder {
       plugins: [
         createSwcPlugin({
           mode: 'workflow',
-          tsBaseUrl,
-          tsPaths,
           workflowManifest,
         }),
         // This plugin must run after the swc plugin to ensure dead code elimination
