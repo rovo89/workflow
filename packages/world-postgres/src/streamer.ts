@@ -108,7 +108,7 @@ export function createStreamer(postgres: Sql, drizzle: Drizzle): Streamer {
         chunkData: toBuffer(chunk),
         eof: false,
       });
-      postgres.notify(
+      await postgres.notify(
         STREAM_TOPIC,
         JSON.stringify(
           StreamPublishMessage.encode({
@@ -145,7 +145,7 @@ export function createStreamer(postgres: Sql, drizzle: Drizzle): Streamer {
 
       // Notify for each chunk (could be batched in future if needed)
       for (const chunkId of chunkIds) {
-        postgres.notify(
+        await postgres.notify(
           STREAM_TOPIC,
           JSON.stringify(
             StreamPublishMessage.encode({
@@ -171,7 +171,7 @@ export function createStreamer(postgres: Sql, drizzle: Drizzle): Streamer {
         chunkData: Buffer.from([]),
         eof: true,
       });
-      postgres.notify(
+      await postgres.notify(
         'workflow_event_chunk',
         JSON.stringify(
           StreamPublishMessage.encode({
