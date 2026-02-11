@@ -60,9 +60,7 @@ export function createStreamer(postgres: Sql, drizzle: Drizzle): Streamer {
 
   const STREAM_TOPIC = 'workflow_event_chunk';
   postgres.listen(STREAM_TOPIC, async (msg) => {
-    const parsed = await Promise.resolve(msg)
-      .then(JSON.parse)
-      .then(StreamPublishMessage.parse);
+    const parsed = StreamPublishMessage.parse(JSON.parse(msg));
 
     const key = `strm:${parsed.streamId}` as const;
     if (!events.listenerCount(key)) {
