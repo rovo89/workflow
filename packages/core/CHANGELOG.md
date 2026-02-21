@@ -1,5 +1,7 @@
 # @workflow/core
 
+## 4.1.0-beta.61
+
 ## 4.1.0-beta.60
 
 ### Patch Changes
