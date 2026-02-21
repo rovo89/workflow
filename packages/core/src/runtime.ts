@@ -274,7 +274,10 @@ export function workflowEntrypoint(
                         },
                       });
                     } catch (err) {
-                      if (WorkflowAPIError.is(err) && err.status === 409) {
+                      if (
+                        WorkflowAPIError.is(err) &&
+                        (err.status === 409 || err.status === 410)
+                      ) {
                         runtimeLogger.warn(
                           'Tried completing workflow run, but run has already finished.',
                           {
@@ -403,7 +406,10 @@ export function workflowEntrypoint(
                           },
                         });
                       } catch (err) {
-                        if (WorkflowAPIError.is(err) && err.status === 409) {
+                        if (
+                          WorkflowAPIError.is(err) &&
+                          (err.status === 409 || err.status === 410)
+                        ) {
                           runtimeLogger.warn(
                             'Tried failing workflow run, but run has already finished.',
                             {
