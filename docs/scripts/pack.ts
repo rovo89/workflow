@@ -71,7 +71,7 @@ async function main() {
         if (packageNames.has(depName)) {
           const escapedName = depName.replace(/^@(.+)\//, '$1-');
           deps[depName] =
-            `https://${process.env.VERCEL_URL}/${escapedName}.tgz`;
+            `https://raw.githubusercontent.com/rovo89/workflow/refs/heads/mine/docs/public/${escapedName}.tgz`;
         }
       }
     };
@@ -92,7 +92,7 @@ async function main() {
       console.log(`Packed ${name}`);
     } finally {
       // Always restore original package.json
-      await fs.writeFile(packageJsonPath, originalPackageJson);
+      await fs.writeFile(packageJsonPath, originalPackageJson + '\n');
     }
   }
 
