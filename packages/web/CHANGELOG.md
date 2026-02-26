@@ -1,5 +1,11 @@
 # @workflow/web
 
+## 4.1.0-beta.35
+
+### Patch Changes
+
+- [#1124](https://github.com/vercel/workflow/pull/1124) [`1f9a67c`](https://github.com/vercel/workflow/commit/1f9a67c759fa6444f6f652692871e8bc7e65ea71) Thanks [@kschmelter13](https://github.com/kschmelter13)! - Replace queue `pg-boss`-based implementation with `graphile-worker`
+
 ## 4.1.0-beta.34
 
 ### Patch Changes

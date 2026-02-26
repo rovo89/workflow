@@ -1,5 +1,12 @@
 # @workflow/builders
 
+## 4.0.1-beta.52
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @workflow/core@4.1.0-beta.61
+
 ## 4.0.1-beta.51
 
 ### Patch Changes
